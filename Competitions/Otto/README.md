@@ -1,57 +1,57 @@
-# Otto Group Product Classification Challenge
+# Otto Group 产品分类挑战赛
 
-## Competition Overview
+## 比赛概述
 
-- **Task**: Multi-class classification (9 classes)
-- **Features**: 93 anonymized numerical features
-- **Metric**: Multi-class log-loss
-- **Method**: PyTorch fully-connected neural network
+- **任务**：多分类（9个类别）
+- **特征**：93个匿名数值特征
+- **评估指标**：Multi-class log-loss
+- **方法**：PyTorch 全连接神经网络
 
-## Network Architecture
+## 网络结构
 
 ```
 Input(93) → Linear(93,64) → ReLU → Dropout(0.3)
-         → Linear(64,32)  → ReLU → Dropout(0.3)
-         → Linear(32,16)  → ReLU → Dropout(0.3)
-         → Linear(16,9)   → Softmax → 9-class probabilities
+          → Linear(64,32)  → ReLU → Dropout(0.3)
+          → Linear(32,16)  → ReLU → Dropout(0.3)
+          → Linear(16,9)   → Softmax → 9类概率输出
 ```
 
-## Training Configuration
+## 训练配置
 
-- **Loss**: CrossEntropyLoss
-- **Optimizer**: Adam (lr=0.01)
-- **Batch size**: 64
-- **Epochs**: 100
+- **损失函数**：CrossEntropyLoss
+- **优化器**：Adam（lr=0.01）
+- **Batch size**：64
+- **Epochs**：100
 
-## Optimization History
+## 优化历程
 
-### v1 - Baseline
-- 4-layer network (93→64→32→16→9)
-- SGD optimizer, lr=0.01, momentum=0.5
-- 50 epochs
-- **Issue**: `predict` method used `torch.max` + `pd.get_dummies`, output was TRUE/FALSE instead of probabilities
+### v1 - 基线版本
+- 4层网络（93→64→32→16→9）
+- SGD 优化器，lr=0.01，momentum=0.5
+- 50个 epoch
+- **问题**：`predict` 方法使用了 `torch.max` + `pd.get_dummies`，输出的是 TRUE/FALSE 而不是概率值
 
-### v2 - Fix prediction output
-- Replaced `get_dummies` with `softmax` to output proper probabilities
-- Kaggle score: ~0.53
+### v2 - 修复预测输出
+- 将 `get_dummies` 替换为 `softmax`，正确输出概率值
+- Kaggle 得分：约 0.53
 
-### v3 - Add Dropout + Adam + more epochs
-- Added Dropout(0.3) between hidden layers
-- Switched optimizer from SGD to Adam
-- Increased epochs from 50 to 100
-- Added `model.train()` / `model.eval()` for proper Dropout behavior
-- Score improved slightly
+### v3 - 添加 Dropout + Adam + 增加 epoch
+- 在隐藏层之间添加了 Dropout(0.3)
+- 优化器从 SGD 换为 Adam
+- Epoch 从 50 增加到 100
+- 添加了 `model.train()` / `model.eval()` 以正确控制 Dropout 行为
+- 得分略有提升
 
-### v4 - Deeper network + BatchNorm + Normalization (failed)
-- Added 5th layer (93→128→64→32→16→9)
-- Added BatchNorm1d after each hidden layer
-- Added Z-score feature normalization
-- **Result**: Score dropped from 0.7x to 0.55
-- **Lesson**: Multiple changes at once can conflict. Normalization changed data distribution but lr=0.01 was too large for Adam with normalized data. Deeper network + BatchNorm + Dropout over-regularized the model. Optimize one variable at a time.
+### v4 - 加深网络 + BatchNorm + 归一化（失败）
+- 增加第5层（93→128→64→32→16→9）
+- 每个隐藏层后添加 BatchNorm1d
+- 添加了 Z-score 特征归一化
+- **结果**：得分从 0.7x 下降到 0.55
+- **教训**：多个改动同时叠加会互相冲突。归一化改变了数据分布但 lr=0.01 对 Adam 来说太大了；更深的网络 + BatchNorm + Dropout 正则化过度，导致欠拟合。优化应该每次只改一个变量。
 
-## Key Takeaways
+## 关键知识点
 
-1. **CrossEntropyLoss vs Softmax**: `CrossEntropyLoss` internally applies softmax, so the network's `forward` should output raw logits. Only add softmax in `predict` for inference.
-2. **Dropout requires train/eval mode**: `model.train()` enables dropout during training; `model.eval()` disables it during inference.
-3. **One change at a time**: When optimizing, change one hyperparameter at a time to understand its effect. Multiple simultaneous changes make it impossible to identify what helped or hurt.
-4. **Training loss ≠ test performance**: A slightly higher training loss with regularization (Dropout) can lead to better test performance.
+1. **CrossEntropyLoss 与 Softmax 的关系**：`CrossEntropyLoss` 内部已经包含了 softmax，所以网络的 `forward` 应该输出 raw logits，只在 `predict` 推理时才手动加 softmax
+2. **Dropout 需要切换训练/评估模式**：`model.train()` 在训练时启用 Dropout；`model.eval()` 在推理时关闭 Dropout
+3. **每次只改一个变量**：优化时一次只调整一个超参数，才能判断哪个改动有效、哪个有害
+4. **训练 loss 不等于测试性能**：加入 Dropout 等正则化后训练 loss 可能略高，但测试性能可能更好
