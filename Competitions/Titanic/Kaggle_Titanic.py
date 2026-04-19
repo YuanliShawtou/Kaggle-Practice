@@ -21,7 +21,7 @@ class TitanicDataset(Dataset):
     def __len__(self):
         return  self.len
 
-dataset = TitanicDataset("./train.csv")
+dataset = TitanicDataset("train.csv")
 
 train_size = int(0.8 * len(dataset))
 test_size = len(dataset) - train_size
@@ -111,7 +111,7 @@ if __name__=="__main__":
     plt.legend()
     plt.show()
 
-test_data = pd.read_csv("./test.csv")
+test_data = pd.read_csv("test.csv")
 test_data = test_data.fillna(test_data['Age'].mean())
 test_data['Sex'] = test_data['Sex'].map({'male': 0, 'female': 1})
 features = ["Pclass", 'Sex',"Age", "SibSp", "Parch", "Fare"]

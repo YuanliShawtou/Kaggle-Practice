@@ -15,7 +15,9 @@ This repository contains my code implementations for various Kaggle competitions
 Kaggle-Practice/
 ├── Competitions/
 │   ├── Titanic/
-│   │   └── Kaggle_Titanic.py    # Binary classification with PyTorch
+│   │   ├── Kaggle_Titanic.py    # Binary classification with PyTorch
+│   │   ├── train.csv
+│   │   └── test.csv
 │   └── Otto/
 │       ├── Kaggle_otto.py       # Multi-class classification with PyTorch
 │       ├── train.csv
